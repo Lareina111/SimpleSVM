@@ -1,0 +1,78 @@
+---
+title: "Using SimpleSVM for Binary Classification"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Using SimpleSVM for Binary Classification}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(SimpleSVM)
+```
+
+## Introduction
+SimpleSVM is an R package that implements a simple support vector machine (SVM) for binary classification using gradient descent. This vignette demonstrates how to use the simple_svm function, provides an example of its output, and compares its performance with the svm() function from the e1071 package.
+
+Example: Training a Simple SVM Model
+In this example, we’ll generate some sample data, train the model using simple_svm, and display the results.
+
+``` {r}
+# Generate sample data
+set.seed(123)
+x <- matrix(rnorm(20), ncol = 2)
+y <- ifelse(x[,1] + x[,2] > 0, 1, -1)
+
+# Train the simple SVM model
+model <- simple_svm(x, y)
+
+# Display the weights and intercept
+model$weights
+model$intercept
+```
+
+## Comparison with svm() from e1071
+For comparison, we’ll use the svm() function from the e1071 package, which provides a more advanced SVM implementation.
+
+```{r}
+# Install e1071 if not already installed
+if (!requireNamespace("e1071", quietly = TRUE)) {
+  install.packages("e1071")
+}
+library(e1071)
+
+e1071_SVM <- svm(x, as.factor(y), type = 'C-classification', kernel = 'linear')
+
+# Extract details
+support_vectors <- e1071_SVM$SV
+alpha <- e1071_SVM$coefs
+intercept <- e1071_SVM$rho
+weights <- t(alpha) %*% support_vectors
+
+# Display the weights and intercept
+cat("Weights:", weights, "\n")
+cat("Intercept:", intercept, "\n")
+```
+
+
+## Performance Comparison
+To benchmark the performance of simple_svm versus svm() from e1071, we’ll use the bench package.
+
+```{r}
+# Install bench if not already installed
+if (!requireNamespace("bench", quietly = TRUE)) {
+  install.packages("bench")
+}
+library(bench)
+
+# Benchmark performance
+bench::mark(
+  SimpleSVM = { simple_svm(x, y); NULL },
+  e1071_SVM = { svm(x, y_factor, type = 'C-classification', kernel = 'linear'); NULL }
+)
+```
+
+## Conclusion
+This vignette demonstrated how to use the simple_svm function for binary classification, including a comparison with the svm() function from e1071. SimpleSVM provides a minimalistic implementation, which is ideal for learning the basics of SVMs and understanding gradient descent.
+

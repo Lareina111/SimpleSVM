@@ -22,32 +22,31 @@
 #' print(model$weights)
 #' print(model$intercept)
 #' @export
-simple_svm <- function(x, y, lambda = 0.01) {
-  n <- nrow(x)
-  p <- ncol(x)
-  y <- as.numeric(y)
+simple_svm <- function(X, y, learning_rate = 0.001, lambda_param = 0.01, n_iters = 1000) {
+  # Convert y to binary labels (-1, 1) if not already
+  y <- ifelse(y <= 0, -1, 1)
 
   # Initialize weights and bias
-  w <- rep(0, p)
-  b <- 0
+  n_samples <- nrow(X)
+  n_features <- ncol(X)
+  weights <- rep(0, n_features)
+  bias <- 0
 
-  # Gradient descent parameters
-  learning_rate <- 0.01
-  epochs <- 1000
-
-  # Train the model using gradient descent
-  for (epoch in 1:epochs) {
-    for (i in 1:n) {
-      if (y[i] * (sum(w * x[i, ]) + b) < 1) {
-        # Update rule when misclassified
-        w <- w + learning_rate * ((y[i] * x[i, ]) - (2 * lambda * w))
-        b <- b + learning_rate * y[i]
+  # Gradient descent
+  for (i in 1:n_iters) {
+    for (j in 1:n_samples) {
+      condition <- y[j] * (sum(X[j, ] * weights) - bias) >= 1
+      if (condition) {
+        # No misclassification
+        weights <- weights - learning_rate * (2 * lambda_param * weights)
       } else {
-        # Update rule when correctly classified
-        w <- w - learning_rate * (2 * lambda * w)
+        # Misclassification
+        weights <- weights - learning_rate * (2 * lambda_param * weights - y[j] * X[j, ])
+        bias <- bias - learning_rate * y[j]
       }
     }
   }
 
-  list(weights = w, intercept = b)
+  # Return trained weights and bias (renamed as intercept)
+  list(weights = weights, intercept = bias)
 }
